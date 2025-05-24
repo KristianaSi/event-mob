@@ -1,38 +1,79 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { View, FlatList, StyleSheet, Text, Alert } from 'react-native';
+import { TextInput, Button, Card, Title } from 'react-native-paper';
+import { LanguageContext } from '../App';
 
-export default function EditEventScreen({
-  events,
-  setEvents,
-  onAddEvent,
-  onDeleteEvent,
-  fontSize,
-  darkTheme,
-}) {
-  const [mode, setMode] = useState(null);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+export default function EditEventScreen({ events, fontSize, darkTheme, language }) {
+  const [eventList, setEventList] = useState(events);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [image, setImage] = useState('');
-  const [newEventTitle, setNewEventTitle] = useState('');
-  const [newEventDescription, setNewEventDescription] = useState('');
-  const [newEventPrice, setNewEventPrice] = useState('');
-  const [newEventImage, setNewEventImage] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const { translations } = useContext(LanguageContext);
 
-  // Розмір тексту
-  const textSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 20 : 16;
-  
-  // Стилі для темної/світлої теми
-  const containerStyle = darkTheme ? styles.darkContainer : styles.lightContainer;
-  const textStyle = darkTheme ? styles.darkText : styles.lightText;
+  const screenStyle = darkTheme ? styles.darkScreen : styles.lightScreen;
+  const textStyle = fontSize === 'small' ? styles.smallText : fontSize === 'large' ? styles.largeText : styles.mediumText;
   const inputStyle = darkTheme ? styles.darkInput : styles.lightInput;
+  const cardStyle = darkTheme ? styles.darkCard : styles.lightCard;
+  const titleStyle = darkTheme ? styles.darkTitle : styles.lightTitle;
   const buttonStyle = darkTheme ? styles.darkButton : styles.lightButton;
-  const activeButtonStyle = darkTheme ? styles.darkActiveButton : styles.lightActiveButton;
-  const eventItemStyle = darkTheme ? styles.darkEventItem : styles.lightEventItem;
-  const deleteButtonStyle = darkTheme ? styles.darkDeleteButton : styles.lightDeleteButton;
+  const buttonTextStyle = darkTheme ? styles.darkButtonText : styles.lightButtonText;
 
-  const handleSelectEvent = (event) => {
+  const addEvent = () => {
+    if (!title || !description || !price || !image) {
+      Alert.alert(translations[language].error, translations[language].errorFillFields);
+      return;
+    }
+
+    const newEvent = {
+      id: String(eventList.length + 1),
+      title,
+      description,
+      price,
+      image,
+    };
+
+    setEventList([...eventList, newEvent]);
+    clearInputs();
+  };
+
+  const editEvent = () => {
+    if (!selectedEvent) return;
+
+    if (!title || !description || !price || !image) {
+      Alert.alert(translations[language].error, translations[language].errorFillFields);
+      return;
+    }
+
+    const updatedEvents = eventList.map((event) =>
+      event.id === selectedEvent.id
+        ? { ...event, title, description, price, image }
+        : event
+    );
+
+    setEventList(updatedEvents);
+    clearInputs();
+    setSelectedEvent(null);
+  };
+
+  const deleteEvent = () => {
+    if (!selectedEvent) return;
+
+    const updatedEvents = eventList.filter((event) => event.id !== selectedEvent.id);
+    setEventList(updatedEvents);
+    clearInputs();
+    setSelectedEvent(null);
+  };
+
+  const clearInputs = () => {
+    setTitle('');
+    setDescription('');
+    setPrice('');
+    setImage('');
+  };
+
+  const selectEvent = (event) => {
     setSelectedEvent(event);
     setTitle(event.title);
     setDescription(event.description);
@@ -40,270 +81,99 @@ export default function EditEventScreen({
     setImage(event.image);
   };
 
-  const handleEdit = () => {
-    if (selectedEvent && title && description && price && image) {
-      const updatedEvents = events.map((event) =>
-        event.id === selectedEvent.id
-          ? { ...event, title, description, price, image }
-          : event
-      );
-      setEvents(updatedEvents);
-      setSelectedEvent(null);
-      setTitle('');
-      setDescription('');
-      setPrice('');
-      setImage('');
-      setMode(null);
-    }
-  };
-
-  const handleDelete = (id) => {
-    onDeleteEvent(id);
-    setSelectedEvent(null);
-    setMode(null);
-  };
-
-  const handleAddNewEvent = () => {
-    if (newEventTitle && newEventDescription && newEventPrice && newEventImage) {
-      const newEvent = {
-        id: Date.now().toString(),
-        title: newEventTitle,
-        description: newEventDescription,
-        price: newEventPrice,
-        image: newEventImage,
-      };
-      onAddEvent(newEvent);
-      setNewEventTitle('');
-      setNewEventDescription('');
-      setNewEventPrice('');
-      setNewEventImage('');
-      setMode(null);
-    }
-  };
+  const renderItem = ({ item }) => (
+    <Card style={[styles.card, cardStyle]} onPress={() => selectEvent(item)}>
+      <Card.Content>
+        <Title style={[styles.title, textStyle, titleStyle]}>{item.title}</Title>
+      </Card.Content>
+    </Card>
+  );
 
   return (
-    <View style={[styles.container, containerStyle]}>
-      <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={[styles.modeButton, buttonStyle, mode === 'add' && activeButtonStyle]}
-          onPress={() => setMode('add')}>
-          <Text style={[styles.buttonText, textStyle]}>Додати</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.modeButton, buttonStyle, mode === 'edit' && activeButtonStyle]}
-          onPress={() => setMode('edit')}>
-          <Text style={[styles.buttonText, textStyle]}>Редагувати</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.modeButton, buttonStyle, mode === 'delete' && activeButtonStyle]}
-          onPress={() => setMode('delete')}>
-          <Text style={[styles.buttonText, textStyle]}>Видалити</Text>
-        </TouchableOpacity>
+    <View style={[styles.screen, screenStyle]}>
+      <TextInput
+        style={[styles.input, inputStyle, textStyle]}
+        placeholder={translations[language].eventTitle}
+        value={title}
+        onChangeText={setTitle}
+        placeholderTextColor={darkTheme ? '#aaa' : '#888'}
+      />
+      <TextInput
+        style={[styles.input, inputStyle, textStyle]}
+        placeholder={translations[language].eventDescription}
+        value={description}
+        onChangeText={setDescription}
+        placeholderTextColor={darkTheme ? '#aaa' : '#888'}
+      />
+      <TextInput
+        style={[styles.input, inputStyle, textStyle]}
+        placeholder={translations[language].eventPrice}
+        value={price}
+        onChangeText={setPrice}
+        placeholderTextColor={darkTheme ? '#aaa' : '#888'}
+      />
+      <TextInput
+        style={[styles.input, inputStyle, textStyle]}
+        placeholder={translations[language].eventImage}
+        value={image}
+        onChangeText={setImage}
+        placeholderTextColor={darkTheme ? '#aaa' : '#888'}
+      />
+      <View style={styles.buttonContainer}>
+        <Button
+          mode="contained"
+          onPress={addEvent}
+          style={[styles.button, buttonStyle]}
+          labelStyle={[textStyle, buttonTextStyle]}
+        >
+          {translations[language].add}
+        </Button>
+        <Button
+          mode="contained"
+          onPress={editEvent}
+          style={[styles.button, buttonStyle]}
+          labelStyle={[textStyle, buttonTextStyle]}
+          disabled={!selectedEvent}
+        >
+          {translations[language].editButton}
+        </Button>
+        <Button
+          mode="contained"
+          onPress={deleteEvent}
+          style={[styles.button, buttonStyle]}
+          labelStyle={[textStyle, buttonTextStyle]}
+          disabled={!selectedEvent}
+        >
+          {translations[language].delete}
+        </Button>
       </View>
-
-      {mode === 'add' && (
-        <View>
-          <Text style={[styles.label, { fontSize: textSize }, textStyle]}>Додати нову подію</Text>
-          <TextInput
-            style={[styles.input, { fontSize: textSize }, inputStyle]}
-            value={newEventTitle}
-            onChangeText={setNewEventTitle}
-            placeholder="Назва"
-            placeholderTextColor={darkTheme ? '#aaa' : '#888'}
-          />
-          <TextInput
-            style={[styles.input, { fontSize: textSize }, inputStyle]}
-            value={newEventDescription}
-            onChangeText={setNewEventDescription}
-            placeholder="Опис"
-            placeholderTextColor={darkTheme ? '#aaa' : '#888'}
-          />
-          <TextInput
-            style={[styles.input, { fontSize: textSize }, inputStyle]}
-            value={newEventPrice}
-            onChangeText={setNewEventPrice}
-            placeholder="Ціна"
-            placeholderTextColor={darkTheme ? '#aaa' : '#888'}
-          />
-          <TextInput
-            style={[styles.input, { fontSize: textSize }, inputStyle]}
-            value={newEventImage}
-            onChangeText={setNewEventImage}
-            placeholder="URL зображення"
-            placeholderTextColor={darkTheme ? '#aaa' : '#888'}
-          />
-          <View style={styles.actionButtons}>
-            <Button 
-              title="Додати" 
-              onPress={handleAddNewEvent} 
-              color={darkTheme ? '#d4af37' : '#8B4513'}
-            />
-            <Button 
-              title="Скасувати" 
-              onPress={() => setMode(null)} 
-              color={darkTheme ? '#aaa' : '#888'}
-            />
-          </View>
-        </View>
-      )}
-
-      {mode === 'edit' && (
-        <View style={styles.fullScreenContainer}>
-          <Text style={[styles.label, { fontSize: textSize }, textStyle]}>Виберіть подію для редагування</Text>
-          <FlatList
-            data={events}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.eventItem, eventItemStyle]}
-                onPress={() => handleSelectEvent(item)}>
-                <Text style={[styles.eventTitle, { fontSize: textSize }, textStyle]}>{item.title}</Text>
-              </TouchableOpacity>
-            )}
-            style={styles.list}
-          />
-          {selectedEvent && (
-            <View>
-              <Text style={[styles.label, { fontSize: textSize }, textStyle]}>Редагувати подію</Text>
-              <TextInput
-                style={[styles.input, { fontSize: textSize }, inputStyle]}
-                value={title}
-                onChangeText={setTitle}
-                placeholder="Назва"
-                placeholderTextColor={darkTheme ? '#aaa' : '#888'}
-              />
-              <TextInput
-                style={[styles.input, { fontSize: textSize }, inputStyle]}
-                value={description}
-                onChangeText={setDescription}
-                placeholder="Опис"
-                placeholderTextColor={darkTheme ? '#aaa' : '#888'}
-              />
-              <TextInput
-                style={[styles.input, { fontSize: textSize }, inputStyle]}
-                value={price}
-                onChangeText={setPrice}
-                placeholder="Ціна"
-                placeholderTextColor={darkTheme ? '#aaa' : '#888'}
-              />
-              <TextInput
-                style={[styles.input, { fontSize: textSize }, inputStyle]}
-                value={image}
-                onChangeText={setImage}
-                placeholder="URL зображення"
-                placeholderTextColor={darkTheme ? '#aaa' : '#888'}
-              />
-              <View style={styles.actionButtons}>
-                <Button 
-                  title="Редагувати" 
-                  onPress={handleEdit} 
-                  color={darkTheme ? '#d4af37' : '#8B4513'}
-                />
-                <Button 
-                  title="Скасувати" 
-                  onPress={() => setSelectedEvent(null)} 
-                  color={darkTheme ? '#aaa' : '#888'}
-                />
-              </View>
-            </View>
-          )}
-          {!selectedEvent && (
-            <Button 
-              title="Скасувати" 
-              onPress={() => setMode(null)} 
-              color={darkTheme ? '#aaa' : '#888'}
-            />
-          )}
-        </View>
-      )}
-
-      {mode === 'delete' && (
-        <View style={styles.fullScreenContainer}>
-          <Text style={[styles.label, { fontSize: textSize }, textStyle]}>Виберіть подію для видалення</Text>
-          <FlatList
-            data={events}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={[styles.eventItem, eventItemStyle]}>
-                <Text style={[styles.eventTitle, { fontSize: textSize }, textStyle]}>{item.title}</Text>
-                <TouchableOpacity
-                  style={[styles.deleteButton, deleteButtonStyle]}
-                  onPress={() => handleDelete(item.id)}>
-                  <Text style={styles.deleteText}>Видалити</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-            style={styles.list}
-          />
-          <Button 
-            title="Скасувати" 
-            onPress={() => setMode(null)} 
-            color={darkTheme ? '#aaa' : '#888'}
-          />
-        </View>
-      )}
+      <FlatList
+        data={eventList}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        style={styles.list}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    padding: 20,
-    paddingTop: 50,
+    padding: 16,
+    paddingTop: 15,
   },
-  lightContainer: {
-    backgroundColor: '#fef7ec',
+  lightScreen: {
+    backgroundColor: '#f5f5dc',
   },
-  darkContainer: {
+  darkScreen: {
     backgroundColor: '#1e3d2f',
-  },
-  fullScreenContainer: {
-    flex: 1,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  modeButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-  },
-  lightButton: {
-    backgroundColor: '#b5a789',
-  },
-  darkButton: {
-    backgroundColor: '#254832',
-  },
-  lightActiveButton: {
-    backgroundColor: '#d4af37',
-  },
-  darkActiveButton: {
-    backgroundColor: '#d4af37',
-  },
-  buttonText: {
-    fontStyle: 'italic',
-    fontWeight: 'bold',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  lightText: {
-    color: '#5d4037',
-  },
-  darkText: {
-    color: '#d4af37',
-  },
-  label: {
-    marginTop: 10,
-    fontStyle: 'italic',
   },
   input: {
     borderWidth: 1,
-    padding: 8,
-    borderRadius: 6,
+    padding: 10,
     marginBottom: 10,
+    borderRadius: 5,
   },
   lightInput: {
     borderColor: '#aaa',
@@ -315,44 +185,58 @@ const styles = StyleSheet.create({
     backgroundColor: '#254832',
     color: '#fff',
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  button: {
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 5,
+  },
+  lightButton: {
+    backgroundColor: '#a67c52',
+  },
+  darkButton: {
+    backgroundColor: '#d4af37',
+  },
+  lightButtonText: {
+    color: '#fff',
+  },
+  darkButtonText: {
+    color: '#1e3d2f',
+  },
   list: {
     flex: 1,
   },
-  eventItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 10,
-    borderBottomWidth: 1,
+  card: {
+    marginBottom: 10,
+    borderRadius: 5,
+    elevation: 2,
   },
-  lightEventItem: {
-    borderBottomColor: '#ccc',
+  lightCard: {
     backgroundColor: '#f0e6d2',
   },
-  darkEventItem: {
-    borderBottomColor: '#254832',
+  darkCard: {
     backgroundColor: '#254832',
   },
-  eventTitle: {
+  title: {
     fontWeight: 'bold',
   },
-  deleteButton: {
-    padding: 5,
-    borderRadius: 5,
+  lightTitle: {
+    color: '#5d4037',
   },
-  lightDeleteButton: {
-    backgroundColor: '#ff4444',
+  darkTitle: {
+    color: '#d4af37',
   },
-  darkDeleteButton: {
-    backgroundColor: '#8B0000',
+  smallText: {
+    fontSize: 14,
   },
-  deleteText: {
-    color: 'white',
-    fontSize: 12,
+  mediumText: {
+    fontSize: 16,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 10,
+  largeText: {
+    fontSize: 18,
   },
 });

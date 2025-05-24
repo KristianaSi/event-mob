@@ -1,178 +1,219 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Modal, Button } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { FlatList, StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
+import { Card, Title, Paragraph, Button } from 'react-native-paper';
+import { LanguageContext } from '../App';
 
-export default function EventsScreen({ events, fontSize, showDate, darkTheme }) {
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const textSize = fontSize === 'small' ? 14 : fontSize === 'large' ? 20 : 16;
-  
-  // Стилі для темної/світлої теми
-  const containerStyle = darkTheme ? styles.darkContainer : styles.lightContainer;
+const EventItem = ({ item, onPress, fontSize, showDate, darkTheme, language }) => {
+  const { translations } = useContext(LanguageContext);
+  const textStyle = fontSize === 'small' ? styles.smallText : fontSize === 'large' ? styles.largeText : styles.mediumText;
   const cardStyle = darkTheme ? styles.darkCard : styles.lightCard;
-  const textStyle = darkTheme ? styles.darkText : styles.lightText;
-  const priceStyle = darkTheme ? styles.darkPrice : styles.lightPrice;
-  const buttonStyle = darkTheme ? styles.darkButton : styles.lightButton;
-  const modalContainerStyle = darkTheme ? styles.darkModalContainer : styles.lightModalContainer;
-
-  const renderItem = ({ item }) => (
-    <View style={[styles.card, cardStyle]}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      <View style={styles.textWrapper}>
-        <Text style={[styles.title, { fontSize: textSize }, textStyle]}>{item.title}</Text>
-        <Text style={[styles.description, { fontSize: textSize - 2 }, textStyle]}>{item.description}</Text>
-        <Text style={[styles.price, { fontSize: textSize - 2 }, priceStyle]}>{item.price}</Text>
-      </View>
-      <TouchableOpacity
-        style={[styles.detailsButton, buttonStyle]}
-        onPress={() => setSelectedEvent(item)}>
-        <Text style={styles.detailsText}>Деталі</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  const titleStyle = darkTheme ? styles.darkTitle : styles.lightTitle;
+  const paragraphStyle = darkTheme ? styles.darkParagraph : styles.lightParagraph;
 
   return (
-    <View style={[styles.container, containerStyle]}>
+    <TouchableOpacity onPress={() => onPress(item)}>
+      <Card style={[styles.card, cardStyle]}>
+        <Card.Content>
+          <Title style={[styles.title, textStyle, titleStyle]}>{item.title}</Title>
+          <Image source={{ uri: item.image }} style={styles.image} />
+          <Paragraph style={[styles.description, textStyle, paragraphStyle]}>
+            {item.description}
+          </Paragraph>
+          {showDate && (
+            <Paragraph style={[styles.date, textStyle, paragraphStyle]}>
+              {translations[language].date}: {item.description.split(', ')[1]}
+            </Paragraph>
+          )}
+          <Paragraph style={[styles.price, textStyle, paragraphStyle]}>
+            {translations[language].price}: {item.price}
+          </Paragraph>
+        </Card.Content>
+      </Card>
+    </TouchableOpacity>
+  );
+};
+
+export default function EventsScreen({ events, fontSize, showDate, darkTheme, language }) {
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const { translations } = useContext(LanguageContext);
+
+  const screenStyle = darkTheme ? styles.darkScreen : styles.lightScreen;
+  const textStyle = fontSize === 'small' ? styles.smallText : fontSize === 'large' ? styles.largeText : styles.mediumText;
+  const titleStyle = darkTheme ? styles.darkTitle : styles.lightTitle;
+  const paragraphStyle = darkTheme ? styles.darkParagraph : styles.lightParagraph;
+
+  const renderItem = ({ item }) => (
+    <EventItem
+      item={item}
+      onPress={setSelectedEvent}
+      fontSize={fontSize}
+      showDate={showDate}
+      darkTheme={darkTheme}
+      language={language}
+    />
+  );
+
+  if (selectedEvent) {
+    return (
+      <View style={[styles.detailContainer, screenStyle]}>
+        <Card style={[styles.detailCard, darkTheme ? styles.darkCard : styles.lightCard]}>
+          <Card.Content>
+            <Title style={[styles.detailTitle, textStyle, titleStyle]}>{selectedEvent.title}</Title>
+            <Image source={{ uri: selectedEvent.image }} style={styles.detailImage} />
+            <Paragraph style={[styles.detailDescription, textStyle, paragraphStyle]}>
+              {selectedEvent.description}
+            </Paragraph>
+            {showDate && (
+              <Paragraph style={[styles.detailDate, textStyle, paragraphStyle]}>
+                {translations[language].date}: {selectedEvent.description.split(', ')[1]}
+              </Paragraph>
+            )}
+            <Paragraph style={[styles.detailPrice, textStyle, paragraphStyle]}>
+              {translations[language].price}: {selectedEvent.price}
+            </Paragraph>
+          </Card.Content>
+          <Button
+            mode="contained"
+            onPress={() => setSelectedEvent(null)}
+            style={[styles.backButton, darkTheme ? styles.darkButton : styles.lightButton]}
+            labelStyle={darkTheme ? styles.darkText : styles.lightText}
+          >
+            {translations[language].backFromDetails}
+          </Button>
+        </Card>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.screen, screenStyle]}>
+      <Text style={[styles.header, textStyle, titleStyle]}>{translations[language].eventList}</Text>
       <FlatList
         data={events}
-        keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.list}
       />
-      <Modal
-        visible={!!selectedEvent}
-        animationType="slide"
-        onRequestClose={() => setSelectedEvent(null)}>
-        <View style={[styles.modalContainer, modalContainerStyle]}>
-          {selectedEvent && (
-            <>
-              <Image source={{ uri: selectedEvent.image }} style={styles.modalImage} />
-              <Text style={[styles.modalTitle, { fontSize: textSize }, textStyle]}>{selectedEvent.title}</Text>
-              <Text style={[styles.modalDescription, { fontSize: textSize - 2 }, textStyle]}>
-                {selectedEvent.description}
-              </Text>
-              <Text style={[styles.modalPrice, { fontSize: textSize - 2 }, priceStyle]}>{selectedEvent.price}</Text>
-              <Button 
-                title="Закрити" 
-                onPress={() => setSelectedEvent(null)} 
-                color={darkTheme ? '#d4af37' : '#8B4513'}
-              />
-            </>
-          )}
-        </View>
-      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    paddingTop: 40,
+    paddingTop: 1,
   },
-  lightContainer: {
-    backgroundColor: '#fef7ec',
+  lightScreen: {
+    backgroundColor: '#f5f5dc',
   },
-  darkContainer: {
+  darkScreen: {
     backgroundColor: '#1e3d2f',
   },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  list: {
+    paddingHorizontal: 16,
+  },
   card: {
-    flexDirection: 'row',
-    marginVertical: 8,
-    marginHorizontal: 10,
+    marginBottom: 1,
     borderRadius: 10,
-    overflow: 'hidden',
-    elevation: 3,
-    position: 'relative',
+    elevation: 4,
   },
   lightCard: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f0e6d2',
   },
   darkCard: {
     backgroundColor: '#254832',
   },
-  image: {
-    width: 100,
-    height: 100,
-  },
-  textWrapper: {
-    flex: 1,
-    padding: 10,
-    justifyContent: 'center',
-  },
   title: {
     fontWeight: 'bold',
-    fontStyle: 'italic',
   },
-  lightText: {
+  lightTitle: {
     color: '#5d4037',
   },
-  darkText: {
+  darkTitle: {
     color: '#d4af37',
   },
+  image: {
+    width: '100%',
+    height: 150,
+    borderRadius: 10,
+    marginVertical: 10,
+  },
   description: {
-    marginTop: 4,
-    fontStyle: 'italic',
+    marginBottom: 5,
+  },
+  date: {
+    marginBottom: 5,
   },
   price: {
-    marginTop: 4,
     fontWeight: 'bold',
-    fontStyle: 'italic',
   },
-  lightPrice: {
-    color: '#aa0000',
+  lightParagraph: {
+    color: '#5d4037',
   },
-  darkPrice: {
-    color: '#ff6b6b',
+  darkParagraph: {
+    color: '#d4af37',
+  },
+  smallText: {
+    fontSize: 14,
+  },
+  mediumText: {
+    fontSize: 16,
+  },
+  largeText: {
+    fontSize: 18,
+  },
+  detailContainer: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'center',
+  },
+  detailCard: {
+    borderRadius: 10,
+    elevation: 4,
+    padding: 10,
+  },
+  detailTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  detailImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  detailDescription: {
+    marginBottom: 10,
+  },
+  detailDate: {
+    marginBottom: 10,
+  },
+  detailPrice: {
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  backButton: {
+    marginVertical: 10,
+    paddingVertical: 5,
   },
   lightButton: {
-    backgroundColor: '#b5a789',
+    backgroundColor: '#a67c52',
   },
   darkButton: {
     backgroundColor: '#d4af37',
   },
-  detailsButton: {
-    position: 'absolute',
-    bottom: 5,
-    right: 5,
-    padding: 5,
-    borderRadius: 5,
+  lightText: {
+    color: '#fff',
   },
-  detailsText: {
-    color: 'white',
-    fontSize: 12,
-  },
-  modalContainer: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lightModalContainer: {
-    backgroundColor: '#fff',
-  },
-  darkModalContainer: {
-    backgroundColor: '#1e3d2f',
-  },
-  modalImage: {
-    width: 200,
-    height: 200,
-    marginBottom: 10,
-    borderRadius: 10,
-  },
-  modalTitle: {
-    fontWeight: 'bold',
-    fontStyle: 'italic',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  modalDescription: {
-    marginTop: 4,
-    fontStyle: 'italic',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  modalPrice: {
-    marginTop: 4,
-    fontWeight: 'bold',
-    fontStyle: 'italic',
-    marginBottom: 20,
+  darkText: {
+    color: '#1e3d2f',
   },
 });
