@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Switch, Text, Button } from 'react-native-paper';
 
 export default function SettingsScreen({
   darkTheme,
@@ -10,92 +11,167 @@ export default function SettingsScreen({
   setShowDate,
 }) {
   const fontSizes = ['small', 'medium', 'large'];
+  const [language, setLanguage] = useState('uk');
+
+  // Стилі для темної/світлої теми
+  const screenStyle = darkTheme ? styles.darkScreen : styles.lightScreen;
+  const settingRowStyle = darkTheme ? styles.darkSettingRow : styles.lightSettingRow;
+  const textStyle = darkTheme ? styles.darkText : styles.lightText;
+  const switchColor = darkTheme ? '#d4af37' : '#8B4513';
+
+  // Стилі для кнопок
+  const getButtonStyle = (isActive) => ({
+    backgroundColor: isActive 
+      ? (darkTheme ? '#d4af37' : '#a67c52') 
+      : 'transparent',
+    borderColor: darkTheme ? '#d4af37' : '#8B4513',
+    borderWidth: 1,
+  });
+
+  const getButtonTextStyle = (isActive) => ({
+    color: isActive 
+      ? (darkTheme ? '#1e3d2f' : '#fff') 
+      : (darkTheme ? '#d4af37' : '#5d4037'),
+  });
 
   return (
-    <View style={[styles.screen, darkTheme ? styles.dark : styles.light]}>
-      <View style={styles.settingRow}>
-        <Text style={[styles.label, darkTheme && styles.labelDark]}>Темна тема</Text>
-        <Switch value={darkTheme} onValueChange={setDarkTheme} />
+    <View style={[styles.screen, screenStyle]}>
+      <View style={[styles.settingRow, settingRowStyle]}>
+        <Text style={[styles.text, textStyle]}>Темна тема</Text>
+        <Switch 
+          value={darkTheme} 
+          onValueChange={setDarkTheme}
+          color={switchColor}
+        />
       </View>
 
-      <View style={styles.settingRowColumn}>
-        <Text style={[styles.label, darkTheme && styles.labelDark]}>Розмір тексту</Text>
+      <View style={[styles.settingRowColumn, settingRowStyle]}>
+        <Text style={[styles.text, textStyle]}>Розмір тексту</Text>
         <View style={styles.fontSizeButtons}>
           {fontSizes.map((size) => (
-            <TouchableOpacity
+            <Button
               key={size}
-              style={[
-                styles.fontButton,
-                fontSize === size && styles.fontButtonActive,
-                darkTheme && fontSize === size && styles.fontButtonActiveDark,
-              ]}
+              mode="outlined"
               onPress={() => setFontSize(size)}
+              style={getButtonStyle(fontSize === size)}
+              labelStyle={getButtonTextStyle(fontSize === size)}
+              theme={{
+                colors: {
+                  primary: darkTheme ? '#d4af37' : '#8B4513',
+                },
+              }}
             >
-              <Text
-                style={[
-                  styles.fontButtonText,
-                  darkTheme && styles.fontButtonTextDark,
-                ]}
-              >
-                {size === 'small' ? 'Малий' : size === 'medium' ? 'Середній' : 'Великий'}
-              </Text>
-            </TouchableOpacity>
+              {size === 'small' ? 'Малий' : size === 'medium' ? 'Середній' : 'Великий'}
+            </Button>
           ))}
         </View>
       </View>
 
-      <View style={styles.settingRow}>
-        <Text style={[styles.label, darkTheme && styles.labelDark]}>Показувати дату події</Text>
-        <Switch value={showDate} onValueChange={setShowDate} />
+      <View style={[styles.settingRow, settingRowStyle]}>
+        <Text style={[styles.text, textStyle]}>Показувати дату події</Text>
+        <Switch 
+          value={showDate} 
+          onValueChange={setShowDate}
+          color={switchColor}
+        />
+      </View>
+
+      <View style={[styles.settingRowColumn, settingRowStyle]}>
+        <Text style={[styles.text, textStyle]}>Мова</Text>
+        <View style={styles.languageButtons}>
+          <Button
+            mode="outlined"
+            onPress={() => setLanguage('uk')}
+            style={getButtonStyle(language === 'uk')}
+            labelStyle={getButtonTextStyle(language === 'uk')}
+            theme={{
+              colors: {
+                primary: darkTheme ? '#d4af37' : '#8B4513',
+              },
+            }}
+          >
+            Українська
+          </Button>
+          <Button
+            mode="outlined"
+            onPress={() => setLanguage('en')}
+            style={getButtonStyle(language === 'en')}
+            labelStyle={getButtonTextStyle(language === 'en')}
+            theme={{
+              colors: {
+                primary: darkTheme ? '#d4af37' : '#8B4513',
+              },
+            }}
+          >
+            English
+          </Button>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, paddingHorizontal: 16, paddingTop: 40 }, // Змінено paddingTop на 40
-  light: { backgroundColor: '#fef9f0' },
-  dark: { backgroundColor: '#1e3d2f' },
+  screen: { 
+    flex: 1, 
+    paddingHorizontal: 16, 
+    paddingTop: 40,
+  },
+  lightScreen: {
+    backgroundColor: '#f5f5dc',
+  },
+  darkScreen: {
+    backgroundColor: '#1e3d2f',
+  },
+  lightSettingRow: {
+    backgroundColor: '#f0e6d2',
+  },
+  darkSettingRow: {
+    backgroundColor: '#254832',
+  },
+  lightText: {
+    color: '#5d4037',
+  },
+  darkText: {
+    color: '#d4af37',
+  },
   settingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 15,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    padding: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   settingRowColumn: {
     marginVertical: 15,
-  },
-  label: {
-    color: '#333',
-    fontSize: 16,
-    fontStyle: 'italic',
-    marginBottom: 8,
-  },
-  labelDark: {
-    color: '#ffffff',
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    padding: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   fontSizeButtons: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    marginTop: 10,
   },
-  fontButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#3b5d44',
-    borderRadius: 6,
+  languageButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
   },
-  fontButtonActive: {
-    backgroundColor: '#b5a789',
-  },
-  fontButtonActiveDark: {
-    backgroundColor: '#d4af37',
-  },
-  fontButtonText: {
-    color: '#333',
-    fontStyle: 'italic',
+  text: {
+    fontSize: 16,
     fontWeight: 'bold',
-  },
-  fontButtonTextDark: {
-    color: '#ffffff',
   },
 });

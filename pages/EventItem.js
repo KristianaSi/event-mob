@@ -9,49 +9,52 @@ const fontSizes = {
 
 export default function EventItem({ event, fontSize, showDate }) {
   return (
-    <View style={styles.item}>
+    <View style={styles.card}>
       <Image source={{ uri: event.image }} style={styles.image} />
-      <View style={styles.textBlock}>
-        <Text style={[styles.title, { fontSize: fontSizes[fontSize], fontStyle: 'italic' }]}>
-          {event.title}
-        </Text>
+      <View style={styles.textWrapper}>
+        <Text style={[styles.title, { fontSize: fontSizes[fontSize] }]}>{event.title}</Text>
         {showDate && (
-          <Text style={[styles.date, { fontSize: fontSizes[fontSize] - 2, fontStyle: 'italic' }]}>
-            {event.date}
+          <Text style={[styles.description, { fontSize: fontSizes[fontSize] - 2 }]}>
+            {event.description}
           </Text>
         )}
+        <Text style={[styles.price, { fontSize: fontSizes[fontSize] - 2 }]}>{event.price}</Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  item: {
+  card: {
     flexDirection: 'row',
+    backgroundColor: '#fff',
     marginVertical: 8,
-    padding: 10,
-    backgroundColor: '#fff8dc',
-    borderRadius: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
+    marginHorizontal: 10,
+    borderRadius: 10,
+    overflow: 'hidden',
+    elevation: 3,
   },
   image: {
-    width: 80,
-    height: 80,
-    borderRadius: 6,
+    width: 100,
+    height: 100,
   },
-  textBlock: {
+  textWrapper: {
     flex: 1,
-    paddingLeft: 10,
+    padding: 10,
     justifyContent: 'center',
   },
   title: {
-    color: '#333',
+    fontWeight: 'bold',
+    fontStyle: 'italic',
   },
-  date: {
-    color: '#666',
+  description: {
     marginTop: 4,
+    fontStyle: 'italic',
+  },
+  price: {
+    marginTop: 4,
+    fontWeight: 'bold',
+    color: '#aa0000',
+    fontStyle: 'italic',
   },
 });
