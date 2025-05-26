@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Switch, Button } from 'react-native-paper';
+import { View, Text, StyleSheet, Switch, Button } from 'react-native';
+import { Button as PaperButton } from 'react-native-paper';
 import { AuthContext, LanguageContext } from '../App';
 
 export default function SettingsScreen({
@@ -51,7 +51,7 @@ export default function SettingsScreen({
         <Text style={[styles.text, textStyle]}>{translations[language].textSize}</Text>
         <View style={styles.fontSizeButtons}>
           {fontSizes.map((size) => (
-            <Button
+            <PaperButton
               key={size}
               mode="outlined"
               onPress={() => setFontSize(size)}
@@ -60,7 +60,7 @@ export default function SettingsScreen({
               theme={{ colors: { primary: darkTheme ? '#d4af37' : '#8B4513' } }}
             >
               {translations[language][size]}
-            </Button>
+            </PaperButton>
           ))}
         </View>
       </View>
@@ -68,7 +68,7 @@ export default function SettingsScreen({
         <Text style={[styles.text, textStyle]}>{translations[language].language}</Text>
         <View style={styles.fontSizeButtons}>
           {languages.map((lang) => (
-            <Button
+            <PaperButton
               key={lang}
               mode="outlined"
               onPress={() => setLanguage(lang)}
@@ -77,7 +77,7 @@ export default function SettingsScreen({
               theme={{ colors: { primary: darkTheme ? '#d4af37' : '#8B4513' } }}
             >
               {translations[language][lang === 'uk' ? 'ukrainian' : 'english']}
-            </Button>
+            </PaperButton>
           ))}
         </View>
       </View>
@@ -86,14 +86,14 @@ export default function SettingsScreen({
         <Switch value={showDate} onValueChange={setShowDate} color={switchColor} />
       </View>
       <View style={[styles.settingRow, settingRowStyle]}>
-        <Button
+        <PaperButton
           mode="contained"
           onPress={handleLogout}
           style={[styles.logoutButton, darkTheme ? styles.darkButton : styles.lightButton]}
           labelStyle={textStyle}
         >
           {translations[language].logout}
-        </Button>
+        </PaperButton>
       </View>
     </View>
   );

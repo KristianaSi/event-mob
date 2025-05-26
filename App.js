@@ -7,10 +7,24 @@ import EventsScreen from './pages/EventsScreen';
 import EditEventScreen from './pages/EditEventScreen';
 import SettingsScreen from './pages/SettingsScreen';
 import AuthScreen from './pages/AuthScreen';
+import PostsScreen from './pages/PostsScreen';
+import PostDetailsScreen from './pages/PostDetailsScreen';
 import { MaterialIcons } from '@expo/vector-icons';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export const AuthContext = createContext();
 export const LanguageContext = createContext();
+
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      cacheTime: 1000 * 60 * 60 * 24, 
+      staleTime: 1000 * 60 * 5, 
+    },
+  },
+});
+
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -119,7 +133,8 @@ const eventsData = [
     title: 'Концерт джазової музики',
     description: 'Філармонія, 15 липня.',
     price: '120 грн',
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSieCKGENcQFlQpx_NmCTN2-lPuJGo0dW6rBQ&s',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:'
+      + 'Andr3FRezXVT1XW9Ddc7aIZ_ht3EdhA54MkUg&s',
   },
   {
     id: '16',
@@ -142,6 +157,7 @@ const translations = {
     events: 'Події',
     edit: 'Редагування',
     settings: 'Налаштування',
+    posts: 'Пости',
     login: 'Вхід у додаток',
     username: "Ім'я користувача",
     password: 'Пароль',
@@ -151,6 +167,7 @@ const translations = {
     loginErrorAlert: 'Помилка авторизації',
     eventList: 'Список подій',
     backFromDetails: 'Вийти з деталей',
+    moreDetails: 'Детальніше',
     date: 'Дата',
     price: 'Вартість',
     currentUser: 'Поточний користувач',
@@ -174,11 +191,23 @@ const translations = {
     language: 'Мова',
     ukrainian: 'Українська',
     english: 'Англійська',
+    postsList: 'Список постів',
+    loading: 'Завантаження...',
+    errorLoading: 'Помилка завантаження постів',
+    addToCalendar: 'Додати до календаря',
+    calendarEventAdded: 'Подію додано до календаря!',
+    calendarError: 'Помилка при роботі з календарем',
+    usernameError: "Ім'я користувача не може бути порожнім",
+    passwordError: 'Пароль не може бути порожнім',
+    calendarPermissionDenied: 'Дозвіл на доступ до календаря не надано',
+    noCalendarFound: 'Не знайдено доступного календаря',
+    dateNotSpecified: 'Дата не вказана',
   },
   en: {
     events: 'Events',
     edit: 'Edit',
     settings: 'Settings',
+    posts: 'Posts',
     login: 'Login to the app',
     username: 'Username',
     password: 'Password',
@@ -188,6 +217,7 @@ const translations = {
     loginErrorAlert: 'Authentication Error',
     eventList: 'Event List',
     backFromDetails: 'Back from Details',
+    moreDetails: 'More Details',
     date: 'Date',
     price: 'Price',
     currentUser: 'Current User',
@@ -211,10 +241,21 @@ const translations = {
     language: 'Language',
     ukrainian: 'Ukrainian',
     english: 'English',
+    postsList: 'List of Posts',
+    loading: 'Loading...',
+    errorLoading: 'Error loading posts',
+    addToCalendar: 'Add to Calendar',
+    calendarEventAdded: 'Event added to calendar!',
+    calendarError: 'Error accessing calendar',
+    usernameError: 'Username cannot be empty',
+    passwordError: 'Password cannot be empty',
+    calendarPermissionDenied: 'Calendar access permission not granted',
+    noCalendarFound: 'No available calendar found',
+    dateNotSpecified: 'Date not specified',
   },
 };
 
-const MainTabs = ({ darkTheme, setDarkTheme, fontSize, setFontSize, showDate, setShowDate, language }) => {
+const MainTabs = ({ darkTheme, setDarkTheme, fontSize, setFontSize, showDate, setShowDate, language, setLanguage }) => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -223,6 +264,7 @@ const MainTabs = ({ darkTheme, setDarkTheme, fontSize, setFontSize, showDate, se
           if (route.name === 'Events') iconName = 'event';
           else if (route.name === 'Edit') iconName = 'edit';
           else if (route.name === 'Settings') iconName = 'settings';
+          else if (route.name === 'Posts') iconName = 'article';
           return <MaterialIcons name={iconName} size={size} color={color} />;
         },
         tabBarStyle: darkTheme ? styles.tabBarDark : styles.tabBarLight,
@@ -235,6 +277,7 @@ const MainTabs = ({ darkTheme, setDarkTheme, fontSize, setFontSize, showDate, se
           if (route.name === 'Events') label = translations[language].events;
           else if (route.name === 'Edit') label = translations[language].edit;
           else if (route.name === 'Settings') label = translations[language].settings;
+          else if (route.name === 'Posts') label = translations[language].posts;
           return (
             <Text style={{ color: focused ? (darkTheme ? '#d4af37' : '#8B4513') : (darkTheme ? '#aaa' : '#888'), fontSize: 12 }}>
               {label}
@@ -244,7 +287,7 @@ const MainTabs = ({ darkTheme, setDarkTheme, fontSize, setFontSize, showDate, se
       })}
     >
       <Tab.Screen name="Events">
-        {() => <EventsScreen events={eventsData} fontSize={fontSize} showDate={showDate} darkTheme={darkTheme} language={language} />}
+        {(props) => <EventsScreen {...props} events={eventsData} fontSize={fontSize} showDate={showDate} darkTheme={darkTheme} language={language} />}
       </Tab.Screen>
       <Tab.Screen name="Edit">
         {() => (
@@ -266,6 +309,17 @@ const MainTabs = ({ darkTheme, setDarkTheme, fontSize, setFontSize, showDate, se
             showDate={showDate}
             setShowDate={setShowDate}
             language={language}
+            setLanguage={setLanguage}
+          />
+        )}
+      </Tab.Screen>
+      <Tab.Screen name="Posts">
+        {() => (
+          <PostsScreen
+            events={eventsData}
+            darkTheme={darkTheme}
+            language={language}
+            translations={translations}
           />
         )}
       </Tab.Screen>
@@ -281,44 +335,53 @@ export default function App() {
   const [language, setLanguage] = useState('uk');
 
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
-      <LanguageContext.Provider value={{ language, setLanguage, translations }}>
-        <NavigationContainer>
-          <Stack.Navigator
-            screenOptions={{
-              headerStyle: darkTheme ? styles.headerDark : styles.headerLight,
-              headerTintColor: darkTheme ? '#d4af37' : '#5d4037',
-            }}
-          >
-            {user ? (
-              <Stack.Screen
-                name="Main"
-                options={{ headerShown: false }}
-              >
-                {() => (
-                  <MainTabs
-                    darkTheme={darkTheme}
-                    setDarkTheme={setDarkTheme}
-                    fontSize={fontSize}
-                    setFontSize={setFontSize}
-                    showDate={showDate}
-                    setShowDate={setShowDate}
-                    language={language}
+    <QueryClientProvider client={queryClient}>
+      <AuthContext.Provider value={{ user, setUser }}>
+        <LanguageContext.Provider value={{ language, setLanguage, translations }}>
+          <NavigationContainer>
+            <Stack.Navigator
+              screenOptions={{
+                headerStyle: darkTheme ? styles.headerDark : styles.headerLight,
+                headerTintColor: darkTheme ? '#d4af37' : '#5d4037',
+              }}
+            >
+              {user ? (
+                <>
+                  <Stack.Screen
+                    name="Main"
+                    component={() => (
+                      <MainTabs
+                        darkTheme={darkTheme}
+                        setDarkTheme={setDarkTheme}
+                        fontSize={fontSize}
+                        setFontSize={setFontSize}
+                        showDate={showDate}
+                        setShowDate={setShowDate}
+                        language={language}
+                        setLanguage={setLanguage}
+                      />
+                    )}
+                    options={{ headerShown: false }}
                   />
-                )}
-              </Stack.Screen>
-            ) : (
-              <Stack.Screen
-                name="Auth"
-                options={{ title: translations[language].login }}
-              >
-                {() => <AuthScreen darkTheme={darkTheme} language={language} />}
-              </Stack.Screen>
-            )}
-          </Stack.Navigator>
-        </NavigationContainer>
-      </LanguageContext.Provider>
-    </AuthContext.Provider>
+                  <Stack.Screen
+                    name="PostDetails"
+                    component={PostDetailsScreen}
+                    options={{ title: translations[language].posts }}
+                    initialParams={{ darkTheme }}
+                  />
+                </>
+              ) : (
+                <Stack.Screen
+                  name="Auth"
+                  component={() => <AuthScreen darkTheme={darkTheme} language={language} />}
+                  options={{ title: translations[language].login }}
+                />
+              )}
+            </Stack.Navigator>
+          </NavigationContainer>
+        </LanguageContext.Provider>
+      </AuthContext.Provider>
+    </QueryClientProvider>
   );
 }
 

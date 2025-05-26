@@ -1,93 +1,29 @@
-import React, { useState, useContext } from 'react';
-import { FlatList, StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
-import { Card, Title, Paragraph, Button } from 'react-native-paper';
+import React, { useContext } from 'react';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { Card, Title, Paragraph } from 'react-native-paper';
 import { LanguageContext } from '../App';
+import EventItem from './EventItem';
 
-const EventItem = ({ item, onPress, fontSize, showDate, darkTheme, language }) => {
-  const { translations } = useContext(LanguageContext);
-  const textStyle = fontSize === 'small' ? styles.smallText : fontSize === 'large' ? styles.largeText : styles.mediumText;
-  const cardStyle = darkTheme ? styles.darkCard : styles.lightCard;
-  const titleStyle = darkTheme ? styles.darkTitle : styles.lightTitle;
-  const paragraphStyle = darkTheme ? styles.darkParagraph : styles.lightParagraph;
-
-  return (
-    <TouchableOpacity onPress={() => onPress(item)}>
-      <Card style={[styles.card, cardStyle]}>
-        <Card.Content>
-          <Title style={[styles.title, textStyle, titleStyle]}>{item.title}</Title>
-          <Image source={{ uri: item.image }} style={styles.image} />
-          <Paragraph style={[styles.description, textStyle, paragraphStyle]}>
-            {item.description}
-          </Paragraph>
-          {showDate && (
-            <Paragraph style={[styles.date, textStyle, paragraphStyle]}>
-              {translations[language].date}: {item.description.split(', ')[1]}
-            </Paragraph>
-          )}
-          <Paragraph style={[styles.price, textStyle, paragraphStyle]}>
-            {translations[language].price}: {item.price}
-          </Paragraph>
-        </Card.Content>
-      </Card>
-    </TouchableOpacity>
-  );
-};
-
-export default function EventsScreen({ events, fontSize, showDate, darkTheme, language }) {
-  const [selectedEvent, setSelectedEvent] = useState(null);
+export default function EventsScreen({ navigation, events, fontSize = 'medium', showDate, darkTheme, language }) {
   const { translations } = useContext(LanguageContext);
 
   const screenStyle = darkTheme ? styles.darkScreen : styles.lightScreen;
-  const textStyle = fontSize === 'small' ? styles.smallText : fontSize === 'large' ? styles.largeText : styles.mediumText;
   const titleStyle = darkTheme ? styles.darkTitle : styles.lightTitle;
-  const paragraphStyle = darkTheme ? styles.darkParagraph : styles.lightParagraph;
 
   const renderItem = ({ item }) => (
     <EventItem
       item={item}
-      onPress={setSelectedEvent}
       fontSize={fontSize}
       showDate={showDate}
       darkTheme={darkTheme}
       language={language}
+      navigation={navigation}
     />
   );
 
-  if (selectedEvent) {
-    return (
-      <View style={[styles.detailContainer, screenStyle]}>
-        <Card style={[styles.detailCard, darkTheme ? styles.darkCard : styles.lightCard]}>
-          <Card.Content>
-            <Title style={[styles.detailTitle, textStyle, titleStyle]}>{selectedEvent.title}</Title>
-            <Image source={{ uri: selectedEvent.image }} style={styles.detailImage} />
-            <Paragraph style={[styles.detailDescription, textStyle, paragraphStyle]}>
-              {selectedEvent.description}
-            </Paragraph>
-            {showDate && (
-              <Paragraph style={[styles.detailDate, textStyle, paragraphStyle]}>
-                {translations[language].date}: {selectedEvent.description.split(', ')[1]}
-              </Paragraph>
-            )}
-            <Paragraph style={[styles.detailPrice, textStyle, paragraphStyle]}>
-              {translations[language].price}: {selectedEvent.price}
-            </Paragraph>
-          </Card.Content>
-          <Button
-            mode="contained"
-            onPress={() => setSelectedEvent(null)}
-            style={[styles.backButton, darkTheme ? styles.darkButton : styles.lightButton]}
-            labelStyle={darkTheme ? styles.darkText : styles.lightText}
-          >
-            {translations[language].backFromDetails}
-          </Button>
-        </Card>
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.screen, screenStyle]}>
-      <Text style={[styles.header, textStyle, titleStyle]}>{translations[language].eventList}</Text>
+      <Text style={[styles.header, titleStyle]}>{translations[language].eventList}</Text>
       <FlatList
         data={events}
         renderItem={renderItem}
@@ -101,7 +37,7 @@ export default function EventsScreen({ events, fontSize, showDate, darkTheme, la
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    paddingTop: 1,
+    paddingTop: 40,
   },
   lightScreen: {
     backgroundColor: '#f5f5dc',
@@ -119,7 +55,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   card: {
-    marginBottom: 1,
+    marginBottom: 16,
     borderRadius: 10,
     elevation: 4,
   },
@@ -200,12 +136,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
+  detailsButton: {
+    marginVertical: 10,
+    paddingVertical: 5,
+  },
   backButton: {
     marginVertical: 10,
     paddingVertical: 5,
   },
   lightButton: {
-    backgroundColor: '#a67c52',
+    backgroundColor: '#8B4513',
   },
   darkButton: {
     backgroundColor: '#d4af37',

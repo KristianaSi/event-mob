@@ -2,18 +2,13 @@ import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
 import { Button } from 'react-native-paper';
 import { AuthContext, LanguageContext } from '../App';
-
-const users = [
-  { username: 'Luci', password: '1234', name: 'Luci' },
-  { username: 'Марька', password: '1234', name: 'Марька' },
-  { username: 'Іванко', password: '1234', name: 'Іванко' },
-  { username: 'Аня', password: '1234', name: 'Аня' },
-];
+import axios from 'axios';
 
 export default function AuthScreen({ darkTheme, language }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { setUser } = useContext(AuthContext);
   const { translations } = useContext(LanguageContext);
 
@@ -23,31 +18,45 @@ export default function AuthScreen({ darkTheme, language }) {
 
   const validateInputs = () => {
     if (!username.trim()) {
-      setError(translations[language].username + " " + translations[language].errorFillFields.toLowerCase());
+      setError(translations[language].usernameError);
       return false;
     }
     if (!password.trim()) {
-      setError(translations[language].password + " " + translations[language].errorFillFields.toLowerCase());
+      setError(translations[language].passwordError);
       return false;
     }
     return true;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setError('');
     if (!validateInputs()) return;
 
-    const foundUser = users.find(
-      (u) => u.username.toLowerCase() === username.toLowerCase() && u.password === password
-    );
+    setLoading(true);
+    try {
+      if (username === 'kris.siladiy@gmail.com' && password === '1234') {
+        setUser({ name: username.split('@')[0] || 'Користувач', token: 'mock-token-1234' });
+        setUsername('');
+        setPassword('');
+        return; 
+      }
 
-    if (foundUser) {
-      setUser(foundUser);
-      setUsername('');
-      setPassword('');
-    } else {
+      
+      const response = await axios.post('https://yourserver.com/api/login', {
+        email: username,
+        password: password,
+      });
+
+      if (response.data.token) {
+        setUser({ name: username.split('@')[0] || 'Користувач', token: response.data.token });
+        setUsername('');
+        setPassword('');
+      }
+    } catch (err) {
       setError(translations[language].loginError);
       Alert.alert(translations[language].loginErrorAlert, translations[language].loginError);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,6 +85,8 @@ export default function AuthScreen({ darkTheme, language }) {
         onPress={handleLogin}
         style={[styles.loginButton, darkTheme ? styles.darkButton : styles.lightButton]}
         labelStyle={textStyle}
+        disabled={loading}
+        loading={loading}
       >
         {translations[language].loginButton}
       </Button>
@@ -83,11 +94,12 @@ export default function AuthScreen({ darkTheme, language }) {
         <Text style={[styles.infoText, textStyle]}>
           {translations[language].testUsers}:
         </Text>
-        {users.map((user) => (
-          <Text key={user.username} style={[styles.infoText, textStyle]}>
-            {user.name}: {user.username} / {user.password}
-          </Text>
-        ))}
+        <Text style={[styles.infoText, textStyle]}>
+          Email: kris.siladiy@gmail.com
+        </Text>
+        <Text style={[styles.infoText, textStyle]}>
+          Password: 1234
+        </Text>
       </View>
     </View>
   );
@@ -139,7 +151,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   lightButton: {
-    backgroundColor: '#a67c52',
+    backgroundColor: '#8B4513',
   },
   darkButton: {
     backgroundColor: '#d4af37',

@@ -1,60 +1,124 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React, { useContext } from 'react';
+import { StyleSheet, Image } from 'react-native';
+import { Card, Title, Paragraph, Button } from 'react-native-paper';
+import { LanguageContext } from '../App';
 
-const fontSizes = {
-  small: 14,
-  medium: 16,
-  large: 20,
-};
+const EventItem = ({ item, fontSize, showDate, darkTheme, language, navigation }) => {
+  const { translations } = useContext(LanguageContext);
 
-export default function EventItem({ event, fontSize, showDate }) {
+  const cardStyle = darkTheme ? styles.darkCard : styles.lightCard;
+  const titleStyle = darkTheme ? styles.darkTitle : styles.lightTitle;
+  const paragraphStyle = darkTheme ? styles.darkParagraph : styles.lightParagraph;
+  const buttonStyle = darkTheme ? styles.darkButton : styles.lightButton;
+  const buttonTextStyle = darkTheme ? styles.darkButtonText : styles.lightButtonText;
+
+  const textSizeStyle = fontSize === 'small' ? styles.smallText : fontSize === 'large' ? styles.largeText : styles.mediumText;
+
+  const eventDate = item.description
+    ? item.description.split(', ')[1] || translations[language].dateNotSpecified
+    : translations[language].dateNotSpecified;
+
+  const handleDetailsPress = () => {
+    navigation.navigate('Posts', { eventId: item.id });
+  };
+
   return (
-    <View style={styles.card}>
-      <Image source={{ uri: event.image }} style={styles.image} />
-      <View style={styles.textWrapper}>
-        <Text style={[styles.title, { fontSize: fontSizes[fontSize] }]}>{event.title}</Text>
+    <Card style={[styles.card, cardStyle]}>
+      <Card.Content>
+        <Title style={[styles.title, titleStyle, textSizeStyle]}>{item.title}</Title>
+        {item.image && <Image source={{ uri: item.image }} style={styles.image} />}
+        <Paragraph style={[styles.description, paragraphStyle, textSizeStyle]} numberOfLines={2}>
+          {item.description}
+        </Paragraph>
         {showDate && (
-          <Text style={[styles.description, { fontSize: fontSizes[fontSize] - 2 }]}>
-            {event.description}
-          </Text>
+          <Paragraph style={[styles.date, paragraphStyle, textSizeStyle]}>
+            {translations[language].date}: {eventDate}
+          </Paragraph>
         )}
-        <Text style={[styles.price, { fontSize: fontSizes[fontSize] - 2 }]}>{event.price}</Text>
-      </View>
-    </View>
+        <Paragraph style={[styles.price, paragraphStyle, textSizeStyle]}>
+          {translations[language].price}: {item.price}
+        </Paragraph>
+        <Button
+          mode="contained"
+          onPress={handleDetailsPress}
+          style={[styles.detailsButton, buttonStyle]}
+          labelStyle={buttonTextStyle}
+        >
+          {translations[language].moreDetails || 'Детальніше'}
+        </Button>
+      </Card.Content>
+    </Card>
   );
-}
+};
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    marginVertical: 8,
-    marginHorizontal: 10,
+    marginBottom: 16,
     borderRadius: 10,
-    overflow: 'hidden',
-    elevation: 3,
+    elevation: 4,
   },
-  image: {
-    width: 100,
-    height: 100,
+  lightCard: {
+    backgroundColor: '#f0e6d2',
   },
-  textWrapper: {
-    flex: 1,
-    padding: 10,
-    justifyContent: 'center',
+  darkCard: {
+    backgroundColor: '#254832',
   },
   title: {
     fontWeight: 'bold',
-    fontStyle: 'italic',
+  },
+  lightTitle: {
+    color: '#5d4037',
+  },
+  darkTitle: {
+    color: '#d4af37',
+  },
+  image: {
+    width: '100%',
+    height: 150,
+    borderRadius: 10,
+    marginVertical: 10,
   },
   description: {
-    marginTop: 4,
-    fontStyle: 'italic',
+    marginBottom: 5,
+  },
+  date: {
+    marginBottom: 5,
   },
   price: {
-    marginTop: 4,
     fontWeight: 'bold',
-    color: '#aa0000',
-    fontStyle: 'italic',
+    marginBottom: 10,
+  },
+  lightParagraph: {
+    color: '#5d4037',
+  },
+  darkParagraph: {
+    color: '#d4af37',
+  },
+  smallText: {
+    fontSize: 14,
+  },
+  mediumText: {
+    fontSize: 16,
+  },
+  largeText: {
+    fontSize: 18,
+  },
+  detailsButton: {
+    marginVertical: 5,
+    paddingVertical: 2,
+  },
+  lightButton: {
+    backgroundColor: '#8B4513',
+  },
+  darkButton: {
+    backgroundColor: '#d4af37',
+  },
+  lightButtonText: {
+    color: '#fff',
+  },
+  darkButtonText: {
+    color: '#1e3d2f',
   },
 });
+
+export default EventItem;

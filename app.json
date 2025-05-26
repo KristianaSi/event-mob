@@ -24,6 +24,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Дозвольте додатку доступ до календаря для додавання подій."
+        }
+      ]
+    ]
   }
 }

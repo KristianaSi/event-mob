@@ -10,6 +10,7 @@ export default function EditEventScreen({ events, fontSize, darkTheme, language 
   const [price, setPrice] = useState('');
   const [image, setImage] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [error, setError] = useState(''); // Додано стан для помилки
   const { translations } = useContext(LanguageContext);
 
   const screenStyle = darkTheme ? styles.darkScreen : styles.lightScreen;
@@ -22,9 +23,11 @@ export default function EditEventScreen({ events, fontSize, darkTheme, language 
 
   const addEvent = () => {
     if (!title || !description || !price || !image) {
+      setError(translations[language].errorFillFields); // Встановлення помилки
       Alert.alert(translations[language].error, translations[language].errorFillFields);
       return;
     }
+    setError(''); // Очищення помилки
 
     const newEvent = {
       id: String(eventList.length + 1),
@@ -42,9 +45,11 @@ export default function EditEventScreen({ events, fontSize, darkTheme, language 
     if (!selectedEvent) return;
 
     if (!title || !description || !price || !image) {
+      setError(translations[language].errorFillFields); // Встановлення помилки
       Alert.alert(translations[language].error, translations[language].errorFillFields);
       return;
     }
+    setError(''); // Очищення помилки
 
     const updatedEvents = eventList.map((event) =>
       event.id === selectedEvent.id
@@ -64,6 +69,7 @@ export default function EditEventScreen({ events, fontSize, darkTheme, language 
     setEventList(updatedEvents);
     clearInputs();
     setSelectedEvent(null);
+    setError(''); // Очищення помилки
   };
 
   const clearInputs = () => {
@@ -71,6 +77,7 @@ export default function EditEventScreen({ events, fontSize, darkTheme, language 
     setDescription('');
     setPrice('');
     setImage('');
+    setError(''); // Очищення помилки
   };
 
   const selectEvent = (event) => {
@@ -79,6 +86,7 @@ export default function EditEventScreen({ events, fontSize, darkTheme, language 
     setDescription(event.description);
     setPrice(event.price);
     setImage(event.image);
+    setError(''); // Очищення помилки при виборі події
   };
 
   const renderItem = ({ item }) => (
@@ -91,6 +99,7 @@ export default function EditEventScreen({ events, fontSize, darkTheme, language 
 
   return (
     <View style={[styles.screen, screenStyle]}>
+      {error ? <Text style={styles.errorText}>{error}</Text> : null} {}
       <TextInput
         style={[styles.input, inputStyle, textStyle]}
         placeholder={translations[language].eventTitle}
@@ -238,5 +247,11 @@ const styles = StyleSheet.create({
   },
   largeText: {
     fontSize: 18,
+  },
+  errorText: {
+    color: '#ff4444',
+    marginBottom: 10,
+    textAlign: 'center',
+    fontSize: 14,
   },
 });
